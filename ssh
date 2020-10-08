@@ -1,0 +1,10 @@
+#!/usr/bin/expect
+set IP [lindex $argv 0]
+set User [lindex $argv 1]
+set pass [lindex $argv 2]
+
+spawn ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $User@$IP
+
+expect "assword:"
+send "$pass\r"
+interact
