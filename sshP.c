@@ -5,7 +5,7 @@
 int main (int argc, char * argv []){
 
 	if (argc != 4){
-		printf("Usage: .>/sshP host user password>\n");
+		printf("Usage: <./sshP host user password>\n");
 		exit(1);
 	}
 
@@ -18,7 +18,7 @@ int main (int argc, char * argv []){
 
 	if(my_ssh_session == NULL){
 		printf("Error creating a new session\n");
-		exit(1):
+		exit(1);
 	}
 
 	//Options for this session
