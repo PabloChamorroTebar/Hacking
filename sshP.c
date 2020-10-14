@@ -11,7 +11,9 @@ int main (int argc, char * argv []){
 
 	//Variables declarations
 	ssh_session my_ssh_session;
-	int response;
+	ssh_channel channel;
+	char buffer [1024];
+	int response, nbytes;
 	
 	//Open a session
 	my_ssh_session = ssh_new();
@@ -38,7 +40,59 @@ int main (int argc, char * argv []){
 		ssh_free(my_ssh_session);
 		exit(1);
 	}
-	
 
+	channel = ssh_channel_new(my_ssh_session);
+	if (channel == NULL)
+		return SSH_ERROR;
+	
+	response = ssh_channel_open_session(channel);
+	if (response != SSH_OK)
+	{
+		ssh_channel_free(channel);
+		return response;
+	}
+	
+	response = ssh_channel_request_exec(channel, "ps aux");
+	if (response != SSH_OK)
+	{
+		ssh_channel_close(channel);
+		ssh_channel_free(channel);
+		ssh_disconnect(my_ssh_session);
+		ssh_free(my_ssh_session);
+		return response;
+	}
+	
+	nbytes = ssh_channel_read(channel, buffer, sizeof(buffer), 0);
+	while (nbytes > 0)
+	{
+		if (write(1, buffer, nbytes) != (unsigned int) nbytes)
+		{
+		ssh_channel_close(channel);
+		ssh_channel_free(channel);
+		ssh_disconnect(my_ssh_session);
+		ssh_free(my_ssh_session);
+		return SSH_ERROR;
+		}
+		nbytes = ssh_channel_read(channel, buffer, sizeof(buffer), 0);
+	}
+	
+	if (nbytes < 0)
+	{
+		ssh_channel_close(channel);
+		ssh_channel_free(channel);
+		ssh_disconnect(my_ssh_session);
+		ssh_free(my_ssh_session);
+		return SSH_ERROR;
+	}
+	
+	ssh_channel_send_eof(channel);
+	ssh_channel_close(channel);
+	ssh_channel_free(channel);
+	ssh_disconnect(my_ssh_session);
+	printf("Desconectamos el ssh\n");
+	ssh_free(my_ssh_session);
+	printf("Liberamos la sesion\n");
+	
+  	return SSH_OK;
 	return 0;
 }
